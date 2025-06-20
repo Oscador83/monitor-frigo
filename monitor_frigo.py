@@ -42,7 +42,7 @@ def obtener_precio_selenium():
         elemento_precio = wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-test-id='product-price']")))
             
-        )
+        
         
         # --- ¡CAMBIO CLAVE! USAMOS JAVASCRIPT PARA EXTRAER EL TEXTO ---
         precio_texto = driver.execute_script("return arguments[0].textContent;", elemento_precio)
