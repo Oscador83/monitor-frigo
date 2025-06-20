@@ -40,7 +40,8 @@ def obtener_precio_selenium():
         wait = WebDriverWait(driver, 10)
         
         elemento_precio = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.price__amount"))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-test-id='product-price']")))
+            
         )
         
         # --- ¡CAMBIO CLAVE! USAMOS JAVASCRIPT PARA EXTRAER EL TEXTO ---
