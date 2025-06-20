@@ -14,7 +14,7 @@ URL_PRODUCTO = "https://www.boulanger.com/ref/1203636"
 NOMBRE_ARCHIVO_CSV = "historial_precios.csv"
 
 def obtener_precio_selenium():
-    """Intenta obtener el precio usando un navegador Chrome real, aceptando el pop-up correcto."""
+    """Intenta obtener el precio usando un navegador Chrome real, siendo paciente."""
     
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -28,24 +28,25 @@ def obtener_precio_selenium():
         driver = webdriver.Chrome(options=chrome_options)
         driver.get(URL_PRODUCTO)
         
-        # --- PASO CLAVE: MANEJAR EL POP-UP MODAL ---
+        # --- PASO 1: MANEJAR EL POP-UP ---
         try:
-            print("Esperando el pop-up de 'Vos données, votre choix'...")
             wait = WebDriverWait(driver, 10)
-            
-            # Buscamos el botón por su texto, que es mucho más fiable en este caso
             accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepter et fermer')]")))
-            
             accept_button.click()
             print("Pop-up de consentimiento aceptado.")
-            time.sleep(2) # Damos un respiro para que la página se cargue bien
         except Exception as e:
             print(f"No se encontró el pop-up de consentimiento (quizás no apareció esta vez): {e}")
 
-        # --- BUSCAR EL PRECIO ---
-        print("Buscando el precio final en la página...")
-        elemento_precio = driver.find_element(By.CSS_SELECTOR, "div.price__amount")
+        # --- PASO 2: ESPERAR A QUE EL PRECIO SEA VISIBLE ---
+        print("Esperando a que el precio sea visible en la página...")
+        wait = WebDriverWait(driver, 10) # Reutilizamos la espera
         
+        # Le decimos que espere hasta que el elemento sea visible, no solo que exista
+        elemento_precio = wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "div.price__amount"))
+        )
+        
+        # Si hemos llegado hasta aquí, el elemento es visible y podemos coger el texto
         precio_texto = elemento_precio.text
         precio_limpio = precio_texto.replace('€', '').replace(' ', '').replace(',', '.').strip()
         precio_float = float(precio_limpio)
@@ -71,7 +72,7 @@ def guardar_en_csv(precio_str):
 
 # --- Flujo principal ---
 if __name__ == "__main__":
-    print("Iniciando monitor de precios (vFinal y Definitiva)...")
+    print("Iniciando monitor de precios (vFinal y Paciente)...")
     resultado = obtener_precio_selenium()
     
     guardar_en_csv(str(resultado))
