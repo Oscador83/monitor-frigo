@@ -29,10 +29,15 @@ jobs:
         MAIL_TO: ${{ secrets.USER_EMAIL }}
       run: python monitor_frigo.py
 
+       # 6. Guarda los cambios (el nuevo precio en el archivo CSV) en el repositorio
     - name: Commit and push if it changed
       run: |-
         git config user.name "GitHub Actions Bot"
         git config user.email "actions@github.com"
+        # Sincroniza con el repositorio remoto ANTES de hacer nada más
+        git pull
         git add historial_precios.csv
-        git diff --quiet && git diff --staged --quiet || git commit -m "Actualización de precios"
+        # Solo hace el commit si hay cambios reales en el archivo
+        git diff --staged --quiet || git commit -m "Actualización de precios"
+        # Empuja los cambios al repositorio
         git push
