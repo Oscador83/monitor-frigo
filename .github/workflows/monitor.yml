@@ -41,3 +41,11 @@ jobs:
         git diff --staged --quiet || git commit -m "Actualización de precios"
         # Empuja los cambios al repositorio
         git push
+
+       # PASO 7 (NUEVO): Guardar la captura de pantalla si el paso anterior falló
+    - name: Upload screenshot artifact on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: error-screenshot
+        path: error_screenshot.png
