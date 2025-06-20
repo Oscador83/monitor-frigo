@@ -1,0 +1,38 @@
+name: Monitor de Precios de Boulanger
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@v1
+
+    - name: Run the scraper
+      env:
+        MAIL_TO: ${{ secrets.USER_EMAIL }}
+      run: python monitor_frigo.py
+
+    - name: Commit and push if it changed
+      run: |-
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        git add historial_precios.csv
+        git diff --quiet && git diff --staged --quiet || git commit -m "Actualización de precios"
+        git push
