@@ -26,3 +26,27 @@ Stacktrace:
 2025-06-20,ERROR_SELENIUM
 2025-06-20,ERROR_SELENIUM
 2025-06-20,ERROR_SELENIUM
+2025-06-20,"ERROR_SELENIUM: Message: no such element: Unable to locate element: {""method"":""css selector"",""selector"":""div.price__amount""}
+  (Session info: chrome=137.0.7151.103); For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#no-such-element-exception
+Stacktrace:
+#0 0x563a1e247c9a <unknown>
+#1 0x563a1dced6e0 <unknown>
+#2 0x563a1dd3f117 <unknown>
+#3 0x563a1dd3f311 <unknown>
+#4 0x563a1dd8dec4 <unknown>
+#5 0x563a1dd64e5d <unknown>
+#6 0x563a1dd8b2cc <unknown>
+#7 0x563a1dd64c03 <unknown>
+#8 0x563a1dd3147b <unknown>
+#9 0x563a1dd320e1 <unknown>
+#10 0x563a1e20c44b <unknown>
+#11 0x563a1e21037f <unknown>
+#12 0x563a1e1f3f89 <unknown>
+#13 0x563a1e210f18 <unknown>
+#14 0x563a1e1d86df <unknown>
+#15 0x563a1e235308 <unknown>
+#16 0x563a1e2354e6 <unknown>
+#17 0x563a1e246b76 <unknown>
+#18 0x7fb00629caa4 <unknown>
+#19 0x7fb006329c3c <unknown>
+"
