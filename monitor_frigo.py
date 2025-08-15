@@ -21,29 +21,33 @@ def obtener_precio_selenium():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    # --- ¡CAMBIO CLAVE! USAMOS UN USER-AGENT MÁS MODERNO Y CREÍBLE ---
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5.37.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/5.37.36")
 
     driver = None
     try:
         driver = webdriver.Chrome(options=chrome_options)
         driver.get(URL_PRODUCTO)
         
-        # Aceptar cookies (si aparecen)
         try:
             wait = WebDriverWait(driver, 10)
             accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepter et fermer')]")))
             accept_button.click()
+            # AÑADIMOS UNA PEQUEÑA PAUSA PARA DEJAR QUE EL BANNER Y SU OVERLAY DESAPAREZCAN
+            time.sleep(1) 
             print("Pop-up de consentimiento aceptado.")
         except Exception as e:
-            print(f"No se encontró o no se pudo hacer clic en el pop-up de consentimiento: {e}")
+            print(f"No se encontró el pop-up de consentimiento: {e}")
 
-        print("Esperando a que el precio sea visible en la página...")
+        print("Esperando a que el elemento del precio esté PRESENTE en el DOM...")
         wait = WebDriverWait(driver, 10)
         
+        # --- ¡¡¡LA SOLUCIÓN FINAL!!! ---
+        # Cambiamos 'visibility_of_element_located' por 'presence_of_element_located'.
+        # Esto solo comprueba que el elemento existe en el HTML, sin importar si está cubierto.
         elemento_precio = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
+            EC.presence_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
             
+        # Usamos JavaScript para extraer el texto, que es el método más fiable.
         precio_texto = driver.execute_script("return arguments[0].textContent;", elemento_precio)
         print(f"Texto extraído: '{precio_texto}'")
 
