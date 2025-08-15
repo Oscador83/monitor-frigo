@@ -21,7 +21,8 @@ def obtener_precio_selenium():
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+    # --- ¡CAMBIO CLAVE! USAMOS UN USER-AGENT MÁS MODERNO Y CREÍBLE ---
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36")
 
     driver = None
     try:
@@ -40,7 +41,6 @@ def obtener_precio_selenium():
         print("Esperando a que el precio sea visible en la página...")
         wait = WebDriverWait(driver, 10)
         
-        # EL SELECTOR CORREGIDO QUE USASTTE EN TU INSPECCIÓN
         elemento_precio = wait.until(
             EC.visibility_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
             
@@ -54,10 +54,8 @@ def obtener_precio_selenium():
     except Exception as e:
         print(f"Se ha producido un error durante la ejecución de Selenium: {e}")
         if driver:
-            # Guardamos la captura para poder depurar el error
             driver.save_screenshot('error_screenshot.png')
             print("Captura de pantalla del error guardada en 'error_screenshot.png'")
-        # Devolvemos un string de error en lugar de un float
         return f"ERROR_SELENIUM"
     finally:
         if driver:
@@ -81,8 +79,6 @@ if __name__ == "__main__":
     
     guardar_en_csv(str(resultado))
     
-    # Si el resultado no es un número, significa que hubo un error.
-    # Forzamos que el workflow falle para que nos avise.
     if not isinstance(resultado, float):
         print("El resultado no es un precio válido. Forzando fallo del workflow para revisión.")
         sys.exit(1)
