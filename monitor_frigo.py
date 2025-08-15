@@ -1,68 +1,90 @@
-# Nombre del workflow que aparecerá en la pestaña "Actions"
-name: Monitor de Precios
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+import datetime
+import os
+import csv
+import sys
 
-# Disparadores: Cuándo se debe ejecutar este workflow
-on:
-  # Permite que lo ejecutes manualmente desde la pestaña "Actions"
-  workflow_dispatch:
+# --- CONFIGURACIÓN ---
+URL_PRODUCTO = "https://www.boulanger.com/ref/1203636"
+NOMBRE_ARCHIVO_CSV = "historial_precios.csv"
 
-  # Opcional: Ejecutar a una hora programada (ej. todos los días a las 8 AM UTC)
-  # Para activarlo, quita el '#' de las dos líneas siguientes.
-  # schedule:
-  #   - cron: '0 8 * * *'
+def obtener_precio_selenium():
+    """Intenta obtener el precio usando un navegador Chrome real."""
+    
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
 
-# Definición de las tareas a realizar
-jobs:
-  build:
-    # Usar la última versión de Ubuntu como máquina virtual
-    runs-on: ubuntu-latest
+    driver = None
+    try:
+        driver = webdriver.Chrome(options=chrome_options)
+        driver.get(URL_PRODUCTO)
+        
+        # Aceptar cookies (si aparecen)
+        try:
+            wait = WebDriverWait(driver, 10)
+            accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepter et fermer')]")))
+            accept_button.click()
+            print("Pop-up de consentimiento aceptado.")
+        except Exception as e:
+            print(f"No se encontró o no se pudo hacer clic en el pop-up de consentimiento: {e}")
 
-    # Secuencia de pasos a ejecutar
-    steps:
-      # 1. Descargar tu código del repositorio a la máquina virtual
-      - name: Checkout del código
-        uses: actions/checkout@v4
+        print("Esperando a que el precio sea visible en la página...")
+        wait = WebDriverWait(driver, 10)
+        
+        # EL SELECTOR CORREGIDO QUE USASTTE EN TU INSPECCIÓN
+        elemento_precio = wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
+            
+        precio_texto = driver.execute_script("return arguments[0].textContent;", elemento_precio)
+        print(f"Texto extraído: '{precio_texto}'")
 
-      # 2. Configurar el entorno de Python 3.10
-      - name: Configurar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+        precio_limpio = precio_texto.replace('€', '').replace('\u202f', '').replace(' ', '').replace(',', '.').strip()
+        precio_float = float(precio_limpio)
+        return precio_float
 
-      # 3. Instalar las librerías de Python necesarias (Selenium)
-      - name: Instalar dependencias de Python
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium
+    except Exception as e:
+        print(f"Se ha producido un error durante la ejecución de Selenium: {e}")
+        if driver:
+            # Guardamos la captura para poder depurar el error
+            driver.save_screenshot('error_screenshot.png')
+            print("Captura de pantalla del error guardada en 'error_screenshot.png'")
+        # Devolvemos un string de error en lugar de un float
+        return f"ERROR_SELENIUM"
+    finally:
+        if driver:
+            driver.quit()
 
-      # 4. Instalar el navegador Google Chrome en la máquina virtual
-      - name: Instalar Google Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-      
-      # 5. Instalar el ChromeDriver correspondiente
-      - name: Instalar ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
+def guardar_en_csv(precio_str):
+    """Guarda la fecha y el precio en el archivo CSV."""
+    existe_archivo = os.path.isfile(NOMBRE_ARCHIVO_CSV)
+    with open(NOMBRE_ARCHIVO_CSV, 'a', newline='', encoding='utf-8') as archivo_csv:
+        escritor = csv.writer(archivo_csv)
+        if not existe_archivo:
+            escritor.writerow(['Fecha', 'Precio'])
+        fecha_hoy = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        escritor.writerow([fecha_hoy, precio_str])
+    print(f"Datos '{precio_str}' guardados en {NOMBRE_ARCHIVO_CSV}")
 
-      # 6. Ejecutar tu script de Python
-      - name: Ejecutar el script de monitoreo
-        run: python monitor_frigo.py
-
-      # 7. Si el script tiene éxito, guardar el archivo CSV como un "artefacto"
-      - name: Guardar el historial de precios (si tuvo éxito)
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: historial-precios
-          path: historial_precios.csv
-          retention-days: 30 # Guardar el historial por 30 días
-
-      # 8. Si el script falla, guardar la captura de pantalla como un "artefacto"
-      - name: Guardar captura en caso de error
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: error-screenshot
-          path: error_screenshot.png
-          retention-days: 5 # Guardar la captura solo por 5 días
+# --- Flujo principal ---
+if __name__ == "__main__":
+    print(f"Iniciando monitor de precios para: {URL_PRODUCTO}")
+    resultado = obtener_precio_selenium()
+    
+    guardar_en_csv(str(resultado))
+    
+    # Si el resultado no es un número, significa que hubo un error.
+    # Forzamos que el workflow falle para que nos avise.
+    if not isinstance(resultado, float):
+        print("El resultado no es un precio válido. Forzando fallo del workflow para revisión.")
+        sys.exit(1)
+        
+    print(f"¡Proceso finalizado con ÉXITO! Precio encontrado: {resultado}")
