@@ -1,85 +1,140 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-import time
-import datetime
-import os
-import csv
-import sys
+# Nombre del workflow que```yaml
+# Nombre del workflow que aparecerá en la pestaña "Actions"
+name: Monitor de Precios
 
-# --- CONFIGURACIÓN ---
-URL_PRODUCTO = "https://www.boulanger.com/ref/1203636"
-NOMBRE_ARCHIVO_CSV = "historial_precios.csv"
+# Dis aparecerá en la pestaña "Actions"
+name: Monitor de Precios
 
-def obtener_precio_selenium():
-    """Intenta obtener el precio usando un navegador Chrome real y JavaScript para extraer el texto."""
-    
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
+# Disparadores: Cuándo debeparadores: Cuándo se debe ejecutar este workflow
+on:
+  # Permite que lo ejecutes manualmente desde ejecutarse este workflow
+on:
+  # Permite que lo ejecutes manualmente desde la pestaña "Actions"
+  workflow la pestaña "Actions"
+  workflow_dispatch:
+  
+  # Opcional: Ejecutar cada vez_dispatch:
+  
+  # Opcional: Descomenta la línea de abajo si quieres que se ejecute cada que haces un commit a la rama principal
+  # push:
+  #   branches:
+  #     - día a las 8 AM
+  # schedule:
+  #   - cron: '0 8 * * *' main
+      
+  # Opcional: Ejecutar a una hora programada (ej. todos los días a las 8 AM UTC)
+  # schedule:
+  #   - cron: '0 8 * * *'
 
-    driver = None
-    try:
-        driver = webdriver.Chrome(options=chrome_options)
-        driver.get(URL_PRODUCTO)
-        
-        try:
-            wait = WebDriverWait(driver, 10)
-            accept_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), 'Accepter et fermer')]")))
-            accept_button.click()
-            print("Pop-up de consentimiento aceptado.")
-        except Exception as e:
-            print(f"No se encontró el pop-up de consentimiento (quizás no apareció esta vez): {e}")
 
-        print("Esperando a que el precio sea visible en la página...")
-        wait = WebDriverWait(driver, 10)
-        
-       elemento_precio = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
-            
-        
-        
-        # --- ¡CAMBIO CLAVE! USAMOS JAVASCRIPT PARA EXTRAER EL TEXTO ---
-        precio_texto = driver.execute_script("return arguments[0].textContent;", elemento_precio)
-        
-        print(f"Texto extraído con JS: '{precio_texto}'")
 
-        precio_limpio = precio_texto.replace('€', '').replace('\u202f', '').replace(' ', '').replace(',', '.').strip()
-        precio_float = float(precio_limpio)
-        return precio_float
+# Definición de las tareas a realizar
+jobs:
+  build:
+    # La máquina virtual que usjobs:
+  # Nombre del trabajo a realizar
+  build:
+    # Usar la última versión de Ubuntuaremos (una Ubuntu limpia y actualizada)
+    runs-on: ubuntu-latest
 
-    except Exception as e:
-        if driver:
-            driver.save_screenshot('error_screenshot.png')
-        return f"ERROR_SELENIUM: {str(e)}"
-    finally:
-        if driver:
-            driver.quit()
+    # La secuencia de pasos que como máquina virtual
+    runs-on: ubuntu-latest
 
-def guardar_en_csv(precio_str):
-    existe_archivo = os.path.isfile(NOMBRE_ARCHIVO_CSV)
-    with open(NOMBRE_ARCHIVO_CSV, 'a', newline='', encoding='utf-8') as archivo_csv:
-        escritor = csv.writer(archivo_csv)
-        if not existe_archivo:
-            escritor.writerow(['Fecha', 'Precio'])
-        fecha_hoy = datetime.date.today().strftime('%Y-%m-%d')
-        escritor.writerow([fecha_hoy, precio_str])
-    print(f"Datos '{precio_str}' guardados en {NOMBRE_ARCHIVO_CSV}")
+    # Secuencia de pasos a ejecutar
+    steps ejecutará la máquina
+    steps:
+      # 1. Descarga tu código en la máquina virtual
+      - name:
+      # 1. Descargar tu código del repositorio a la máquina virtual
+      - name: Checkout del código: Checkout del código
+        uses: actions/checkout@v4
 
-# --- Flujo principal ---
-if __name__ == "__main__":
-    print("Iniciando monitor de precios (vJavaScript-Extractor)...")
-    resultado = obtener_precio_selenium()
-    
-    guardar_en_csv(str(resultado))
-    
-    if not isinstance(resultado, float):
-        print("El resultado no es un precio válido. Forzando fallo para revisión.")
-        sys.exit(1)
-        
-    print("¡Proceso finalizado con ÉXITO!")
+      # 2. Instala el entorno de Python
+
+        uses: actions/checkout@v3
+
+      # 2. Configurar el entorno de Python
+      - name:      - name: Configurar Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Instala Configurar Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # 3. Instalar las librerías de las librerías de Python (Selenium en este caso)
+      - name: Instalar dependencias de Python
+ Python necesarias
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --        run: |
+          python -m pip install --upgrade pip
+          pip install selenium
+
+      # 4. (upgrade pip
+          pip install selenium
+
+      # --- ¡AQUÍ ESTÁ LA MAGIA! INSTALACIÓN DELPASO NUEVO) Instala el navegador Google Chrome
+      - name: Instalar Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      #  NAVEGADOR Y DRIVER ---
+      
+      # 4. Instalar el navegador Google Chrome en la máquina virtual
+5. (PASO NUEVO) Instala el ChromeDriver compatible con el Chrome instalado
+      - name: Instalar ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      # 6. Ejecuta tu script de Python
+      - name: Instalar Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+      
+      # 5. Instalar el ChromeDriver correspondiente a la versión de Chrome
+      - name: Instalar ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      # --- FIN      - name: Ejecutar el script de monitoreo
+        # --- ¡¡¡ATENCIÓN!!! ---
+        # Asegúrate de que el nombre del archivo aquí es el correcto.
+        # Si tu script se llama "main.py", pon DE LA INSTALACIÓN ---
+
+      # 6. Ejecutar tu script de Python
+      - name: Ejecutar el "python main.py".
+        run: python monitor_frigo.py 
+
+      # 7. S script de monitoreo
+        run: python monitor_frigo.py # <-- ¡¡¡IMPORTANTE!!! Reemplaza 'ube el archivo CSV como un "artefacto" para que puedas descargarlo
+      - name: Guardar el historialmonitor_frigo.py' con el nombre real de tu archivo Python.
+
+      # 7. Si el script tiene éxito, guardar el archivo CSV como un "artefacto"
+      - name: Guardar el historial de precios
+ de precios (si tuvo éxito)
+        uses: actions/upload-artifact@v4
+        with:
+          name: historial-precios
+          path: historial_precios.csv
+
+      # 8. Si el paso 6 fall        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: historial-precios
+          path: historial_precios.csv
+
+      # 8. Si el script falla,ó, sube la captura de pantalla del error
+      - name: Guardar captura en caso de error
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: guardar la captura de pantalla como un "artefacto"
+      - name: Guardar captura en caso de error
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name error-screenshot
+          path: error_screenshot.png
