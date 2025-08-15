@@ -39,8 +39,8 @@ def obtener_precio_selenium():
         print("Esperando a que el precio sea visible en la página...")
         wait = WebDriverWait(driver, 10)
         
-        elemento_precio = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, "[data-test-id='product-price']")))
+       elemento_precio = wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "p.price__amount")))
             
         
         
