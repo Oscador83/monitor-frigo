@@ -1,9 +1,9 @@
 name: Monitor de Precios de Boulanger
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
-  workflow_dispatch:
+  # schedule:
+  #   - cron: '0 9 * * *'
+  # workflow_dispatch:
 
 jobs:
   build:
